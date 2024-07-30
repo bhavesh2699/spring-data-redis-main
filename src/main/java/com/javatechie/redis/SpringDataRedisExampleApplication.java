@@ -1,6 +1,7 @@
 package com.javatechie.redis;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -28,11 +29,11 @@ public class SpringDataRedisExampleApplication {
         return roundRobinService.getNextEntry(key);
     }
     
-    @PostMapping("/add")
+    /*@PostMapping("/add")
     public ResponseEntity<Void> addValue(@RequestParam String key, @RequestParam String value) {
         roundRobinService.addValue(key, value);
         return new ResponseEntity<>(HttpStatus.CREATED);
-    }
+    }*/
     
     public static void main(String[] args) {
         SpringApplication.run(SpringDataRedisExampleApplication.class, args);
