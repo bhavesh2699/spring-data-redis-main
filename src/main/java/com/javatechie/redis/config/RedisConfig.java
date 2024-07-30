@@ -9,6 +9,8 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import redis.clients.jedis.Jedis;
+
 @Configuration
 @EnableRedisRepositories
 public class RedisConfig {
@@ -18,6 +20,7 @@ public class RedisConfig {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName("localhost");
         configuration.setPort(6379);
+        
         return new JedisConnectionFactory(configuration);
     }
 

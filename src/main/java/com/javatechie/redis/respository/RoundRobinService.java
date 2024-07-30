@@ -7,7 +7,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -19,38 +23,34 @@ public class RoundRobinService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    private AtomicInteger counter;
-    
-    String queue = "q1,q2,q3,q4,q5";// for tesing, will need to pass values from DB
+    //private AtomicInteger counter;
 
-    public Map.Entry<String, String> getNextEntry(String key) {
-        Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
-        counter = new AtomicInteger(-1);
+    public Map.Entry<String, String> getNextEntry(String disseminationProfileId, String queueNames) {
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(disseminationProfileId);
+        //counter = new AtomicInteger(-1);
 
         if (entries == null || entries.isEmpty()) {
-        	String[] arr = queue.split(","); 
+        	String[] arr = queueNames.split(","); 
             ArrayList<String> list = new ArrayList<>(Arrays.asList(arr));
             for(String queue: list)
-            	redisTemplate.opsForHash().put(key, queue, queue);
+            	redisTemplate.opsForHash().put(disseminationProfileId, queue, String.valueOf(System.currentTimeMillis())); //store queue names with current time
             System.out.println("Data doesn't exist for key's in cache, queues names fetched and added to cache");
-            entries = redisTemplate.opsForHash().entries(key);
+            entries = redisTemplate.opsForHash().entries(disseminationProfileId);
         }
         
-        if(redisTemplate.opsForHash().entries("currentCount").containsKey(key)) {
-        	int k = Integer.parseInt(redisTemplate.opsForHash().entries("currentCount").get(key).toString());
-        	counter.set(k);
-        }
-        
-        //System.out.println("counter::"+ counter);
-        int index = counter.incrementAndGet() % entries.size();
-        //System.out.println("counter.counter.get()()::"+ counter.get());
-        //System.out.println("index::"+ index);
-        //System.out.println("================================");
-        String nextKey = (String) entries.keySet().stream().sorted().toArray()[index];
-        String nextValue = (String) entries.get(nextKey);
-        redisTemplate.opsForHash().put("currentCount", key ,index);
+        //logic to fetch queues which is least recently used for particular dissemination profile id
+        Entry<Object, Object> lruEntry = Collections.min(
+        		entries.entrySet(),
+                Comparator.comparingLong(entry -> Long.parseLong((String) entry.getValue()))
+            );
 
-        return Map.entry(nextKey, nextValue);
+        String lruQueueKey = lruEntry.getKey().toString();
+        String lruQueueVal = lruEntry.getValue().toString();
+        
+        redisTemplate.opsForHash().put(disseminationProfileId, lruQueueKey, String.valueOf(System.currentTimeMillis())); ////update queue names with current time
+
+      
+        return Map.entry(lruQueueKey, lruQueueVal);
     }
     
     /*public void addValue(String key, String value) {

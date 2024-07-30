@@ -1,5 +1,6 @@
 package com.javatechie.redis;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,10 +24,12 @@ public class SpringDataRedisExampleApplication {
 	
 	@Autowired
     private RoundRobinService roundRobinService;
+	
+	String queueNames = "q1,q2,q3,q4,q5"; //for tesing, will need to pass values from DB
 
     @GetMapping("/getNextEntry")
-    public Map.Entry<String, String> getNextEntry(@RequestParam String key) {
-        return roundRobinService.getNextEntry(key);
+    public Map.Entry<String, String> getNextEntry(@RequestParam String disseminationProfileId) {
+        return roundRobinService.getNextEntry(disseminationProfileId, queueNames);
     }
     
     /*@PostMapping("/add")
