@@ -25,11 +25,17 @@ public class SpringDataRedisExampleApplication {
 	@Autowired
     private RoundRobinService roundRobinService;
 	
-	String queueNames = "q1,q2,q3,q4,q5"; //for tesing, will need to pass values from DB
+	String queueNames = "q1,q2,q3,q4,q5"; //for testing, will need to pass values from DB
 
     @GetMapping("/getNextEntry")
-    public Map.Entry<String, String> getNextEntry(@RequestParam String disseminationProfileId) {
-        return roundRobinService.getNextEntry(disseminationProfileId, queueNames);
+    public String getNextEntry(@RequestParam String disseminationProfileId) {
+    	Map<Object, Object> cachedQueues = roundRobinService.initializeCache(disseminationProfileId, queueNames);
+    	if(cachedQueues != null) 
+    		return roundRobinService.getNextEntry(disseminationProfileId, cachedQueues);
+    	else {
+            System.out.println("Error: Cache is NULL/Empty "+cachedQueues);
+    		return null;
+    	}
     }
     
     /*@PostMapping("/add")
