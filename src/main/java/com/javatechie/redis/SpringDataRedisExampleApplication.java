@@ -1,5 +1,7 @@
 package com.javatechie.redis;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -24,18 +26,46 @@ public class SpringDataRedisExampleApplication {
 	@Autowired
     private RedisTemplate<String, String> redisTemplate;
 	
-	String queueNames = "q1,q2,q3,q4,q5"; //for testing, will need to pass values from DB
+	String queueNames = "q1,q2,q3,q4,q5,q6"; //for testing, will need to pass values from DB
 
     @GetMapping("/getNextEntry")
     public String getNextEntry(@RequestParam String disseminationProfileId) {
     	ListOperations<String, String> listOps = redisTemplate.opsForList();
         List<String> cachedQueues = listOps.range("ISO_CACHE_DISSEMINATION_ROUNDROBIN_" + disseminationProfileId, 0, -1);
-        if(!cachedQueues.isEmpty()) 
+        
+        String[] splitedQueues = queueNames.split(",");
+        List<String> listOfQueues = new ArrayList<>(Arrays.asList(splitedQueues));
+        
+        if(!cachedQueues.isEmpty() && deleteCacheIfNecessary(disseminationProfileId, cachedQueues, listOfQueues)) 
     		return roundRobinService.getNextEntry(disseminationProfileId, cachedQueues);
     	else {
-            cachedQueues = roundRobinService.initializeCache(disseminationProfileId, queueNames);
+    		resetLastAccessedIdx(disseminationProfileId);  // reset counter if queues doesn't exist 
+            cachedQueues = roundRobinService.initializeCache(disseminationProfileId, listOfQueues);
             return roundRobinService.getNextEntry(disseminationProfileId, cachedQueues);
     	}
+    }
+    
+    private Boolean deleteCacheIfNecessary(String disseminationProfileId, List<String> cachedQueues, List<String> listOfQueues) {
+    	Boolean compareQueueNames = compareQueueNames(cachedQueues, listOfQueues);
+        if (!compareQueueNames) {
+            // Delete the cache
+        	System.out.println("cache Deleted...");
+            redisTemplate.delete("ISO_CACHE_DISSEMINATION_ROUNDROBIN_" + disseminationProfileId);
+        }
+        return compareQueueNames;
+    }
+    
+    private void resetLastAccessedIdx(String disseminationProfileId) {
+    	String counterKey = "ISO_CACHE_DISSEMINATION_ROUNDROBIN_LAST_ACCESSED_IDX_" + disseminationProfileId;
+        if (redisTemplate.hasKey(counterKey)) {
+        	System.out.println("cache reset...");
+            redisTemplate.opsForValue().set(counterKey, "0");
+        }
+    }
+    
+    private Boolean compareQueueNames(List<String> cachedQueues, List<String> listOfQueues) {
+    	System.out.println("cache compare...");
+    	return cachedQueues.equals(listOfQueues);
     }
     
     /*

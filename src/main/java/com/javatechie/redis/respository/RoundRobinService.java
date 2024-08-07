@@ -7,8 +7,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.support.atomic.RedisAtomicInteger;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -20,9 +18,7 @@ public class RoundRobinService {
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
     
-    public List<String> initializeCache(String disseminationProfileId, String queueNames) {
-        String[] splitedQueues = queueNames.split(",");
-        List<String> listOfQueues = new ArrayList<>(Arrays.asList(splitedQueues));
+    public List<String> initializeCache(String disseminationProfileId, List<String> listOfQueues) {
         ListOperations<String, String> listOps = redisTemplate.opsForList();
         listOps.rightPushAll("ISO_CACHE_DISSEMINATION_ROUNDROBIN_" + disseminationProfileId, listOfQueues);
         return listOfQueues;
@@ -33,6 +29,7 @@ public class RoundRobinService {
     	 if (cachedQueues != null && !cachedQueues.isEmpty()) {
              String counterKey = "ISO_CACHE_DISSEMINATION_ROUNDROBIN_LAST_ACCESSED_IDX_" + disseminationProfileId;
              RedisAtomicInteger counter = new RedisAtomicInteger(counterKey, redisConnectionFactory);
+             System.out.println("counter: "+counter);
              int index = counter.getAndIncrement() % cachedQueues.size();
              if(counter.get() >= 20) 
             	 counter.set(0); // Reset counter to prevent overflow
