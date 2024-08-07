@@ -1,21 +1,49 @@
 package com.javatechie.redis.respository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.support.atomic.RedisAtomicInteger;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class RoundRobinService {
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
     
-    public Map<Object, Object> initializeCache(String disseminationProfileId, String queueNames) {
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
+    
+    public List<String> initializeCache(String disseminationProfileId, String queueNames) {
+        String[] splitedQueues = queueNames.split(",");
+        List<String> listOfQueues = new ArrayList<>(Arrays.asList(splitedQueues));
+        ListOperations<String, String> listOps = redisTemplate.opsForList();
+        listOps.rightPushAll("ISO_CACHE_DISSEMINATION_ROUNDROBIN_" + disseminationProfileId, listOfQueues);
+        return listOfQueues;
+    }
+
+
+    public String getNextEntry(String disseminationProfileId, List<String> cachedQueues) {
+    	 if (cachedQueues != null && !cachedQueues.isEmpty()) {
+             String counterKey = "ISO_CACHE_DISSEMINATION_ROUNDROBIN_LAST_ACCESSED_IDX_" + disseminationProfileId;
+             RedisAtomicInteger counter = new RedisAtomicInteger(counterKey, redisConnectionFactory);
+             int index = counter.getAndIncrement() % cachedQueues.size();
+             if(counter.get() >= 20) 
+            	 counter.set(0); // Reset counter to prevent overflow
+
+             return cachedQueues.get(index);
+         }
+    	return "";
+ 
+    }
+    
+    /*public Map<Object, Object> initializeCache(String disseminationProfileId, String queueNames) {
     	
     	String[] arr = queueNames.split(","); 
         ArrayList<String> list = new ArrayList<>(Arrays.asList(arr));
@@ -46,6 +74,6 @@ public class RoundRobinService {
     	}
     	return null;
  
-    }
+    }*/
     
 }

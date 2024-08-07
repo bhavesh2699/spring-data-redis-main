@@ -1,17 +1,12 @@
 package com.javatechie.redis;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,10 +22,23 @@ public class SpringDataRedisExampleApplication {
     private RoundRobinService roundRobinService;
 	
 	@Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
 	
 	String queueNames = "q1,q2,q3,q4,q5"; //for testing, will need to pass values from DB
 
+    @GetMapping("/getNextEntry")
+    public String getNextEntry(@RequestParam String disseminationProfileId) {
+    	ListOperations<String, String> listOps = redisTemplate.opsForList();
+        List<String> cachedQueues = listOps.range("ISO_CACHE_DISSEMINATION_ROUNDROBIN_" + disseminationProfileId, 0, -1);
+        if(!cachedQueues.isEmpty()) 
+    		return roundRobinService.getNextEntry(disseminationProfileId, cachedQueues);
+    	else {
+            cachedQueues = roundRobinService.initializeCache(disseminationProfileId, queueNames);
+            return roundRobinService.getNextEntry(disseminationProfileId, cachedQueues);
+    	}
+    }
+    
+    /*
     @GetMapping("/getNextEntry")
     public String getNextEntry(@RequestParam String disseminationProfileId) {
     	Map<Object, Object> cachedQueues = redisTemplate.opsForHash().entries("ISO_CACHE_DISSEMINATION_ROUNDROBIN_"+disseminationProfileId);
@@ -41,7 +49,7 @@ public class SpringDataRedisExampleApplication {
             cachedQueues = roundRobinService.initializeCache(disseminationProfileId, queueNames);
             return roundRobinService.getNextEntry(disseminationProfileId, cachedQueues);
     	}
-    }
+    }*/
     
     /*@PostMapping("/add")
     public ResponseEntity<Void> addValue(@RequestParam String key, @RequestParam String value) {
