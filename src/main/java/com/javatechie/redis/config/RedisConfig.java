@@ -1,23 +1,27 @@
 package com.javatechie.redis.config;
 
+import org.springframework.cache.annotation.CachingConfigurerSupport;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import redis.clients.jedis.Jedis;
 
 @Configuration
 @EnableRedisRepositories
-public class RedisConfig {
+@EnableCaching
+public class RedisConfig extends CachingConfigurerSupport {
 
     @Bean
-    public JedisConnectionFactory connectionFactory() {
+    public JedisConnectionFactory connectionFactory()  {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName("localhost");
         configuration.setPort(6379);
@@ -44,6 +48,16 @@ public class RedisConfig {
         //template.setHashKeySerializer(new StringRedisSerializer());
         //template.setHashValueSerializer(new GenericToStringSerializer<>(String.class));
         return template;
+    }
+    
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+            .disableCachingNullValues(); // Optional: disable caching of null values
+
+        return RedisCacheManager.builder(redisConnectionFactory)
+            .cacheDefaults(cacheConfig)
+            .build();
     }
 
 }
