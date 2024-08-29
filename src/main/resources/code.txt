@@ -1,47 +1,31 @@
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-public class JSONParserExample {
+public class JSONParser {
     public static void main(String[] args) {
+        String jsonString = "[{\"tableName\":\"APP CLIENTS T\",\"config\":{\"columns\":{\"inputs\":[{\"colIdx\":0,\"colName\":\"name\",\"colType\":\"text\"},{\"colIdx\":1,\"colName\":\"code\",\"colType\":\"text\"},{\"colIdx\":2,\"colName\":\"owner\",\"colType\":\"text\"}]}},\"data\":{\"tableName\":\"APP CLIENTS T\",\"rows\":[{\"rowIdx\":0,\"cols\":[{\"cellData\":\"DEMO\",\"cellRef\":\"4a7e7c33\",\"colIdx\":0},{\"cellData\":\"DEMO\",\"cellRef\":\"44eef796\",\"colIdx\":1},{\"cellData\":\"Solanki, Bhavesh\",\"cellRef\":\"dd1039b6\",\"colIdx\":2}]}]}}]";
+
         try {
-            // Replace with the actual JSON string from your image
-            String jsonString = "{\"id\": 123456543, \"config\": {\"columns\": {\"inputs\": [{\"colIdx\":0,\"colName\":\"name\",\"colType\":\"text\"},{\"colIdx\":1,\"colName\":\"code\",\"colType\":\"text\"},{\"colIdx\":2,\"colName\":\"owner\",\"colType\":\"text\"}],\"outputs\":[]},\"data\": {\"tableName\":\"APP TEST\",\"rows\": [{\"id\": 123456789,\"rowidx\":0,\"cols\": [{\"cellData\":\"DEMO\",\"cellRef\":\"4a7e7c33\",\"colIdx\":0},{\"cellData\":\"DD Test\",\"cellRef\":\"44eef796\",\"colIdx\":1},{\"cellData\":\"Solanki, Bhavesh\",\"cellRef\":\"dd103966\",\"colIdx\":2}]}]}}";
-
             JSONArray jsonArray = new JSONArray(jsonString);
+            JSONObject jsonObject = jsonArray.getJSONObject(0);
+            JSONObject inputColumns = jsonObject.getJSONObject("config").getJSONObject("columns").getJSONArray("inputs").getJSONObject(1); // Directly access the "code" column
 
-            JSONObject appClientsT = jsonArray.getJSONObject(0);
-            JSONArray appClientsTColumns = appClientsT.getJSONObject("config").getJSONObject("columns").getJSONArray("inputs");
+            int codeColIdx = inputColumns.getInt("colIdx");
+            int ownerColIdx = inputColumns.getInt("colIdx") + 1; // Assuming owner is always after code
 
-            // Extract colIdx values for "code" and "owner"
-            JSONArray inputs = (JSONArray) ((JSONObject) jsonObject.get("config")).get("columns").get("inputs");
-            int codeColIdx = -1, ownerColIdx = -1;
-            for (JSONObject input : inputs) {
-                if (input.get("colName").equals("code")) {
-                    codeColIdx = (int) input.get("colIdx");
-                } else if (input.get("colName").equals("owner")) {
-                    ownerColIdx = (int) input.get("colIdx");
+            JSONArray dataRows = jsonObject.getJSONObject("data").getJSONArray("rows");
+            for (int i = 0; i < dataRows.length(); i++) {
+                JSONObject dataRow = dataRows.getJSONObject(i);
+                JSONArray cols = dataRow.getJSONArray("cols");
+                String codeValue = cols.getJSONObject(codeColIdx).getString("cellData");
+                if (codeValue.equals("DD_Test")) {
+                    String ownerValue = cols.getJSONObject(ownerColIdx).getString("cellData");
+                    System.out.println("Owner for \"DD_Test\": " + ownerValue);
+                    break;
                 }
             }
-
-            // Search for "DD_Test" and retrieve owner details
-            JSONArray rows = (JSONArray) jsonObject.get("data").get("rows");
-            for (JSONObject row : rows) {
-                JSONArray cols = (JSONArray) row.get("cols");
-                for (JSONObject col : cols) {
-                    if (col.get("colIdx").equals(codeColIdx) && col.get("cellData").equals("DD Test")) {
-                        for (JSONObject col : cols) {
-                            if (col.get("colIdx").equals(ownerColIdx)) {
-                                System.out.println("Owner: " + col.get("cellData"));
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-        } catch (ParseException e) {
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
