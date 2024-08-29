@@ -1,45 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-const JSONParserExample = () => {
-  const [jsonData, setJsonData] = useState(null);
-  const [owner, setOwner] = useState('');
+public class JSONParserExample {
+    public static void main(String[] args) {
+        try {
+            // Replace with the actual JSON string from your image
+            String jsonString = "{\"id\": 123456543, \"config\": {\"columns\": {\"inputs\": [{\"colIdx\":0,\"colName\":\"name\",\"colType\":\"text\"},{\"colIdx\":1,\"colName\":\"code\",\"colType\":\"text\"},{\"colIdx\":2,\"colName\":\"owner\",\"colType\":\"text\"}],\"outputs\":[]},\"data\": {\"tableName\":\"APP TEST\",\"rows\": [{\"id\": 123456789,\"rowidx\":0,\"cols\": [{\"cellData\":\"DEMO\",\"cellRef\":\"4a7e7c33\",\"colIdx\":0},{\"cellData\":\"DD Test\",\"cellRef\":\"44eef796\",\"colIdx\":1},{\"cellData\":\"Solanki, Bhavesh\",\"cellRef\":\"dd103966\",\"colIdx\":2}]}]}}";
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('https://your-api-endpoint.com/data'); // Replace with your API endpoint
-        const data = response.data;
-        setJsonData(data);
+            JSONArray jsonArray = new JSONArray(jsonString);
 
-        // Extract colIdx values for "code" and "owner"
-        const { columns: { inputs } } = data;
-        const codeColIdx = inputs.find(input => input.colName === 'code').colIdx;
-        const ownerColIdx = inputs.find(input => input.colName === 'owner').colIdx;
+            JSONObject appClientsT = jsonArray.getJSONObject(0);
+            JSONArray appClientsTColumns = appClientsT.getJSONObject("config").getJSONObject("columns").getJSONArray("inputs");
 
-        // Search for "DD_Test" and retrieve owner details
-        const { data: { rows } } = data;
-        const matchingRow = rows.find(row => row.cols.some(col => col.colIdx === codeColIdx && col.cellData === 'DD Test'));
-        if (matchingRow) {
-          setOwner(matchingRow.cols.find(col => col.colIdx === ownerColIdx).cellData);
+            // Extract colIdx values for "code" and "owner"
+            JSONArray inputs = (JSONArray) ((JSONObject) jsonObject.get("config")).get("columns").get("inputs");
+            int codeColIdx = -1, ownerColIdx = -1;
+            for (JSONObject input : inputs) {
+                if (input.get("colName").equals("code")) {
+                    codeColIdx = (int) input.get("colIdx");
+                } else if (input.get("colName").equals("owner")) {
+                    ownerColIdx = (int) input.get("colIdx");
+                }
+            }
+
+            // Search for "DD_Test" and retrieve owner details
+            JSONArray rows = (JSONArray) jsonObject.get("data").get("rows");
+            for (JSONObject row : rows) {
+                JSONArray cols = (JSONArray) row.get("cols");
+                for (JSONObject col : cols) {
+                    if (col.get("colIdx").equals(codeColIdx) && col.get("cellData").equals("DD Test")) {
+                        for (JSONObject col : cols) {
+                            if (col.get("colIdx").equals(ownerColIdx)) {
+                                System.out.println("Owner: " + col.get("cellData"));
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  return (
-    <div>
-      {jsonData ? (
-        <p>Owner: {owner}</p>
-      ) : (
-        <p>Loading data...</p>
-      )}
-    </div>
-  );
-};
-
-export default JSONParserExample;
+    }
+}
