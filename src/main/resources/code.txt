@@ -1,32 +1,35 @@
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import React, { useState, useEffect } from 'react';
 
-public class JSONParser {
-    public static void main(String[] args) {
-        String jsonString = "[{\"tableName\":\"APP CLIENTS T\",\"config\":{\"columns\":{\"inputs\":[{\"colIdx\":0,\"colName\":\"name\",\"colType\":\"text\"},{\"colIdx\":1,\"colName\":\"code\",\"colType\":\"text\"},{\"colIdx\":2,\"colName\":\"owner\",\"colType\":\"text\"}]}},\"data\":{\"tableName\":\"APP CLIENTS T\",\"rows\":[{\"rowIdx\":0,\"cols\":[{\"cellData\":\"DEMO\",\"cellRef\":\"4a7e7c33\",\"colIdx\":0},{\"cellData\":\"DEMO\",\"cellRef\":\"44eef796\",\"colIdx\":1},{\"cellData\":\"Solanki, Bhavesh\",\"cellRef\":\"dd1039b6\",\"colIdx\":2}]}]}}]";
-
-        try {
-            JSONArray jsonArray = new JSONArray(jsonString);
-            JSONObject jsonObject = jsonArray.getJSONObject(0);
-            JSONObject inputColumns = jsonObject.getJSONObject("config").getJSONObject("columns").getJSONArray("inputs").getJSONObject(1); // Directly access the "code" column
-
-            int codeColIdx = inputColumns.getInt("colIdx");
-            int ownerColIdx = inputColumns.getInt("colIdx") + 1; // Assuming owner is always after code
-
-            JSONArray dataRows = jsonObject.getJSONObject("data").getJSONArray("rows");
-            for (int i = 0; i < dataRows.length(); i++) {
-                JSONObject dataRow = dataRows.getJSONObject(i);
-                JSONArray cols = dataRow.getJSONArray("cols");
-                String codeValue = cols.getJSONObject(codeColIdx).getString("cellData");
-                if (codeValue.equals("DD_Test")) {
-                    String ownerValue = cols.getJSONObject(ownerColIdx).getString("cellData");
-                    System.out.println("Owner for \"DD_Test\": " + ownerValue);
-                    break;
-                }
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
+function getColIdxFromInputKey(data, inputKey) {
+  const { config } = data[0];
+  const { inputs } = config.columns;
+  const colIdx = inputs.find(col => col.colName === inputKey)?.colIdx;
+  return colIdx;
 }
+
+function getCellDataForColIdx(data, colIdx) {
+  const { data: { rows } } = data[0];
+  const cellData = rows.map(row => row.cols.find(col => col.colIdx === colIdx)?.cellData || '');
+  return cellData.join(', ');
+}
+
+function App() {
+  const [data, setData] = useState([/* Your JSON data here */]);
+  const inputKey = 'rev_bic8';
+
+  useEffect(() => {
+    const colIdx = getColIdxFromInputKey(data, inputKey);
+    if (colIdx !== undefined) {
+      const cellData = getCellDataForColIdx(data, colIdx);
+      console.log(cellData);
+    }
+  }, [data, inputKey]);
+
+  return (
+    <div>
+      {/* Your UI components here */}
+    </div>
+  );
+}
+
+export default App;
