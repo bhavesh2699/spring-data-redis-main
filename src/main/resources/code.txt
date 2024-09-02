@@ -33,3 +33,46 @@ function App() {
 }
 
 export default App;
+
+
+
+============================
+
+
+// Parse JSON string
+        Gson gson = new Gson();
+        JsonObject jsonObject = gson.fromJson(jsonString, JsonObject.class);
+        JsonArray rows = jsonObject.get("data").getAsJsonObject().get("rows").getAsJsonArray();
+
+        // Split input bics
+        String[] inputBicArray = inputBics.split(",");
+
+        // Initialize empty string to store comma-separated owners
+        StringBuilder ownerString = new StringBuilder();
+
+        // Optimize the loop by using a HashMap to store BIC-owner pairs
+        HashMap<String, String> bicOwnerMap = new HashMap<>();
+        for (int i = 0; i < rows.size(); i++) {
+            JsonObject row = rows.get(i).getAsJsonObject();
+            JsonArray cols = row.get("cols").getAsJsonArray();
+            String currentBic = cols.get(0).getAsJsonObject().get("cellData").getAsString();
+            String owner = cols.get(1).getAsJsonObject().get("cellData").getAsString();
+            bicOwnerMap.put(currentBic, owner);
+        }
+
+        // Iterate over input BICs and retrieve owners from the map
+        for (String bic : inputBicArray) {
+            String owner = bicOwnerMap.get(bic);
+            if (owner != null) {
+                ownerString.append(owner).append(",");
+            }
+        }
+
+        // Remove the trailing comma
+        if (ownerString.length() > 0) {
+            ownerString.deleteCharAt(ownerString.length() - 1);
+        }
+
+        System.out.println(ownerString.toString());
+    }
+}
