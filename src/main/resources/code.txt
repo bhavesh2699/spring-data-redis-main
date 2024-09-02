@@ -76,3 +76,25 @@ export default App;
         System.out.println(ownerString.toString());
     }
 }
+
+==================
+
+
+Gson gson = new Gson();
+        JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
+
+        // Split input bics
+        String[] inputBicArray = inputBics.split(",");
+
+        // Initialize empty string to store comma-separated owners
+        StringBuilder ownerString = new StringBuilder();
+
+        // Optimize the loop by using a HashMap to store BIC-owner pairs
+        HashMap<String, String> bicOwnerMap = new HashMap<>();
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JsonObject row = jsonArray.get(i).getAsJsonObject().get("data").getAsJsonObject().get("rows").get(0).getAsJsonObject();
+            JsonArray cols = row.get("cols").getAsJsonArray();
+            String currentBic = cols.get(0).getAsJsonObject().get("cellData").getAsString();
+            String owner = cols.get(1).getAsJsonObject().get("cellData").getAsString();
+            bicOwnerMap.put(currentBic, owner);
+        }
