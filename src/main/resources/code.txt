@@ -114,3 +114,8 @@ function getCellDataForColIdx(data, rcv_bic_colIdx, sndr_bic_colIdx, msg_id_bic_
 
   return cellData;
 }
+
+
+function getCommaSeparatedRcvBic(cellData) {
+  return cellData.map(row => row.rcv_bic).join(',');
+}
