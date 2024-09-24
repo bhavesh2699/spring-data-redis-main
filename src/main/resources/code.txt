@@ -98,3 +98,19 @@ Gson gson = new Gson();
             String owner = cols.get(1).getAsJsonObject().get("cellData").getAsString();
             bicOwnerMap.put(currentBic, owner);
         }
+
+
+======================================
+
+
+function getCellDataForColIdx(data, rcv_bic_colIdx, sndr_bic_colIdx, msg_id_bic_colIdx) {
+  const { data: { rows }} = data[0];
+
+  const cellData = rows.map(row => ({
+    rcv_bic: row.cols.find(col => col.rcv_bic_colIdx === rcv_bic_colIdx)?.cellData || '',
+    sndr_bic: row.cols.find(col => col.sndr_bic_colIdx === sndr_bic_colIdx)?.cellData || '',
+    msg_id_bic: row.cols.find(col => col.msg_id_bic_colIdx === msg_id_bic_colIdx)?.cellData || ''
+  }));
+
+  return cellData;
+}
