@@ -133,3 +133,20 @@ function createJsonWithRcvBicAsKey(cellData) {
   });
   return json;
 }
+
+
+function createJsonWithRcvBicAsKey(cellData) {
+  const json = {};
+
+  cellData.forEach(({ rcv_bic, sndr_bic, msg_id_bic }) => {
+    if (!json[rcv_bic]) {
+      json[rcv_bic] = { sndr_bic, msg_id_bic };
+    } else {
+      // Handle duplicates here, e.g., append to an array
+      json[rcv_bic].sndr_bic = [json[rcv_bic].sndr_bic, sndr_bic];
+      json[rcv_bic].msg_id_bic = [json[rcv_bic].msg_id_bic, msg_id_bic];
+    }
+  });
+
+  return json;
+}
