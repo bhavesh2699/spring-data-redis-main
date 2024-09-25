@@ -119,3 +119,17 @@ function getCellDataForColIdx(data, rcv_bic_colIdx, sndr_bic_colIdx, msg_id_bic_
 function getCommaSeparatedRcvBic(cellData) {
   return cellData.map(row => row.rcv_bic).join(',');
 }
+
+
+
+
+function createJsonWithRcvBicAsKey(cellData) {
+  const json = {};
+  cellData.forEach(row => {
+    json[row.rcv_bic] = {
+      sndr_bic: row.sndr_bic,
+      msg_id_bic: row.msg_id_bic
+    };
+  });
+  return json;
+}
