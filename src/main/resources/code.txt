@@ -150,3 +150,23 @@ function createJsonWithRcvBicAsKey(cellData) {
 
   return json;
 }
+
+
+
+
+function getCellDataForColIdx(data, rcv_bic_colIdx, sndr_bic_colIdx, msg_id_bic_colIdx) {
+  const { data: { rows, changedRows } } = data[0];
+
+  const filteredRows = rows.filter(row => {
+    const rowIdx = row.rowIdx.toString(); // Ensure rowIdx is a string for comparison
+    return changedRows.hasOwnProperty(rowIdx) && changedRows[rowIdx] !== "ROW_DELETE";
+  });
+
+  const cellData = filteredRows.map(row => ({
+    rcv_bic: row.cols.find(col => col.rcv_bic_colIdx === rcv_bic_colIdx)?.cellData || '',
+    sndr_bic: row.cols.find(col => col.sndr_bic_colIdx === sndr_bic_colIdx)?.cellData || '',
+    msg_id_bic: row.cols.find(col => col.msg_id_bic_colIdx === msg_id_bic_colIdx)?.cellData || ''
+  }));
+
+  return cellData;
+}
