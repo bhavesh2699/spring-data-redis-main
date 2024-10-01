@@ -212,3 +212,15 @@ function MyComponent() {
 }
 
 export default MyComponent;
+
+
+
+
+
+
+ const updateQueryParam = (paramName, paramValue) => {
+    const urlParams = new URLSearchParams(location.search);
+    urlParams.set(paramName, paramValue);
+    const newUrl = `${location.pathname}?${urlParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+  };
