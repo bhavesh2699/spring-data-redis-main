@@ -170,3 +170,45 @@ function getCellDataForColIdx(data, rcv_bic_colIdx, sndr_bic_colIdx, msg_id_bic_
 
   return cellData;
 }
+
+
+
+
+
+
+===========================================
+
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+function MyComponent() {
+  const [url, setUrl] = useState(window.location.href);
+  const location = useLocation();
+
+  useEffect(() => {
+    // Update the URL state when the location changes
+    setUrl(location.pathname);
+  }, [location]);
+
+  const removeQueryParam = (paramName) => {
+    const urlParams = new URLSearchParams(url);
+    urlParams.delete(paramName);
+    const newUrl = `${location.origin}${location.pathname}?${urlParams.toString()}`;
+    setUrl(newUrl);
+    window.history.replaceState({}, '', newUrl); // Update browser history
+  };
+
+  // Usage example:
+  const handleRemoveQueryParam = () => {
+    removeQueryParam('myParam');
+  };
+
+  return (
+    <div>
+      <p>Current URL: {url}</p>
+      <button onClick={handleRemoveQueryParam}>Remove Query Param</button>
+    </div>
+  );
+}
+
+export default MyComponent;
